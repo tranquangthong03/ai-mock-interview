@@ -1,15 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { checkBackendHealth, getBaseUrl } from "@/lib/api";
+import {
+  AnimatedPage,
+  Badge,
+  Card,
+  MetricCard,
+  PageContainer,
+  SectionCard,
+  StatusBadge,
+  TechBackground,
+  TechIllustration,
+} from "@/components/ui";
 
-const steps = [
-  { num: 1, icon: "📄", title: "Upload CV & JD", desc: "Tải lên file CV và mô tả công việc (PDF, DOCX, TXT)" },
-  { num: 2, icon: "🔍", title: "Parse & Index", desc: "AI phân tích nội dung và lưu vào vector store (ChromaDB)" },
-  { num: 3, icon: "🎤", title: "Phỏng vấn", desc: "Trả lời câu hỏi từ AI Interviewer theo ngữ cảnh CV/JD" },
-  { num: 4, icon: "📊", title: "Đánh giá", desc: "Nhận feedback chi tiết theo 6 tiêu chí sau mỗi câu trả lời" },
-  { num: 5, icon: "📋", title: "Báo cáo", desc: "Xem tổng kết, skill gaps và kế hoạch cải thiện cá nhân hóa" },
+const workflow = [
+  ["Upload CV & JD", "Prepare candidate and job context."],
+  ["Parse candidate profile", "Extract structured skills, projects, and requirements."],
+  ["Index interview context", "Store context for RAG-based question generation."],
+  ["AI asks English questions", "Run a focused technical interview round."],
+  ["Vietnamese evaluation", "Score each answer and explain feedback in Vietnamese."],
+  ["Export final report", "Generate Markdown/PDF reports for review."],
+];
+
+const features = [
+  ["English technical questions", "Interview prompts stay in English for realistic practice."],
+  ["Voice answer with STT", "Record spoken answers and convert them to transcript."],
+  ["Speech metrics", "Track duration, word count, pace, fillers, and pauses."],
+  ["RAG-based context", "Questions are grounded in CV and job description content."],
+  ["Vietnamese feedback", "Evaluation and improvement guidance are easy to present."],
+  ["Markdown/PDF export", "Download a final report for demo or review."],
 ];
 
 export default function Home() {
@@ -20,86 +41,102 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-10">
-      {/* Hero */}
-      <section className="text-center space-y-4 pt-6">
-        <h1 className="text-4xl font-bold tracking-tight">
-          🎤 AI Mock Interviewer
-        </h1>
-        <p className="text-lg text-[var(--muted)] max-w-xl mx-auto leading-relaxed">
-          Luyện phỏng vấn kỹ thuật với AI — nhận đánh giá chi tiết theo 6 tiêu chí
-          và kế hoạch cải thiện cá nhân hóa.
-        </p>
-        <Link
-          href="/setup"
-          className="inline-flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--primary-hover)] transition-colors text-base shadow-md"
-        >
-          Bắt đầu Demo →
-        </Link>
-      </section>
-
-      {/* Workflow Steps */}
-      <section>
-        <h2 className="text-xl font-semibold mb-5 text-center">Quy trình phỏng vấn</h2>
-        <div className="space-y-3">
-          {steps.map((s, i) => (
-            <div
-              key={s.num}
-              className="flex items-start gap-4 bg-white border border-[var(--border)] rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-sm shrink-0">
-                {s.num}
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">{s.icon} {s.title}</h3>
-                <p className="text-sm text-[var(--muted)]">{s.desc}</p>
-              </div>
-              {i < steps.length - 1 && (
-                <span className="text-gray-300 text-lg mt-1">→</span>
-              )}
+    <PageContainer className="space-y-12 overflow-hidden">
+      <TechBackground />
+      <AnimatedPage className="relative space-y-12">
+        <section className="grid items-center gap-8 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-14">
+          <div className="space-y-6">
+            <Badge tone="blue">AI Interview Platform · Developer Assessment</Badge>
+            <div className="space-y-4">
+              <h1 className="max-w-4xl text-5xl font-black tracking-tight text-slate-50 lg:text-7xl">
+                AI Mock Interviewer for Tech Candidates
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-slate-300">
+                Practice English technical interviews with AI-generated questions, voice answers,
+                Vietnamese feedback, and detailed reports.
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="flex gap-3">
+              <Link
+                href="/setup"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/15 transition hover:-translate-y-0.5 hover:bg-cyan-400 hover:shadow-cyan-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              >
+                Start Interview Setup
+              </Link>
+              <a
+                href="#workflow"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-cyan-500/40 bg-transparent px-5 py-2.5 text-sm font-bold text-cyan-200 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              >
+                Explore Workflow
+              </a>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <MetricCard label="Language flow" value="EN → VI" helper="English interview, Vietnamese feedback" tone="indigo" />
+              <MetricCard label="Rubric" value="6" helper="Criteria scored after each answer" tone="blue" />
+              <MetricCard label="Exports" value="MD/PDF" helper="Report artifacts for demo" tone="violet" />
+            </div>
+          </div>
+          <TechIllustration />
+        </section>
 
-      {/* System Status */}
-      <section className="bg-white border border-[var(--border)] rounded-xl p-5 shadow-sm">
-        <h2 className="font-semibold mb-3">⚙️ Trạng thái hệ thống</h2>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--muted)]">Backend URL</span>
-            <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{getBaseUrl()}</code>
+        <SectionCard className="relative overflow-hidden">
+          <div className="scan-highlight absolute inset-x-0 top-0 h-px" aria-hidden="true" />
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-slate-50">Backend health</h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Current API endpoint: <code className="rounded-lg bg-slate-800 px-2 py-1 text-xs text-slate-200">{getBaseUrl()}</code>
+              </p>
+            </div>
+            <StatusBadge status={backendOk === null ? "loading" : backendOk ? "online" : "offline"} />
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--muted)]">Backend Status</span>
-            {backendOk === null ? (
-              <span className="text-blue-500 animate-pulse text-xs">Đang kiểm tra...</span>
-            ) : backendOk ? (
-              <span className="text-emerald-600 font-medium text-xs flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Đang chạy
-              </span>
-            ) : (
-              <span className="text-red-600 text-xs">
-                ❌ Không kết nối được — chạy <code className="bg-gray-100 px-1 rounded">uvicorn app.main:app --reload</code>
-              </span>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--muted)]">Sample files</span>
-            <span className="text-xs text-gray-500">
-              <code className="bg-gray-100 px-1 rounded">public/demo_samples/</code>
-            </span>
-          </div>
-        </div>
-      </section>
+          {backendOk === false && (
+            <p className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100">
+              Không kết nối được backend. Hãy chạy FastAPI backend rồi tải lại trang trước khi demo.
+            </p>
+          )}
+        </SectionCard>
 
-      {/* Tech */}
-      <section className="text-center text-sm text-[var(--muted)] pb-6">
-        <p>
-          Built with <strong>FastAPI</strong> · <strong>Gemini AI</strong> ·{" "}
-          <strong>ChromaDB</strong> · <strong>Next.js</strong> · <strong>TypeScript</strong>
-        </p>
-      </section>
-    </div>
+        <section id="workflow" className="space-y-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600">Workflow</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-50">From documents to interview report</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {workflow.map(([title, description], index) => (
+              <Card key={title} className="animate-slide-up-fade" style={{ animationDelay: `${index * 80}ms` }}>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-500 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-50">{title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-5 pb-10">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600">Capabilities</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-50">Built for a complete AI interview demo</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {features.map(([title, description], index) => (
+              <SectionCard key={title} className="animate-slide-up-fade" style={{ animationDelay: `${index * 70}ms` }}>
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 text-sm font-black text-cyan-200">
+                  {index + 1}
+                </div>
+                <h3 className="font-bold text-slate-50">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+              </SectionCard>
+            ))}
+          </div>
+        </section>
+      </AnimatedPage>
+    </PageContainer>
   );
 }

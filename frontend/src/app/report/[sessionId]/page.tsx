@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { downloadBlob, exportReport, generateReport, getReport, getSummary } from "@/lib/api";
 import {
-  generateReport,
-  getReport,
-  getSummary,
-  exportReport,
-  downloadBlob,
-} from "@/lib/api";
-import {
-  LoadingButton,
-  ErrorAlert,
+  AnimatedPage,
+  Badge,
+  Button,
   Card,
-  ScoreBar,
+  CriteriaScoreGrid,
+  EmptyState,
+  ErrorAlert,
+  InsightList,
+  LoadingState,
+  MetricCard,
+  PageContainer,
+  PageHeader,
+  SectionCard,
+  TechBackground,
 } from "@/components/ui";
 import type { InterviewReport, InterviewSummary } from "@/types";
 
@@ -21,8 +26,8 @@ const criterionLabels: Record<string, string> = {
   relevance: "Relevance (Đúng trọng tâm)",
   clarity: "Clarity (Rõ ràng)",
   specificity: "Specificity (Cụ thể)",
-  technical_accuracy: "Technical Accuracy (Kỹ thuật)",
-  jd_alignment: "JD Alignment (Phù hợp JD)",
+  technical_accuracy: "Technical accuracy (Kỹ thuật)",
+  jd_alignment: "JD alignment (Phù hợp JD)",
   communication: "Communication (Giao tiếp)",
 };
 
@@ -36,29 +41,26 @@ export default function ReportPage() {
   const [loadingReport, setLoadingReport] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [error, setError] = useState("");
-
-  // Export states
   const [exportingMd, setExportingMd] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [exportError, setExportError] = useState("");
 
-  // Load existing report + summary
   useEffect(() => {
     async function load() {
       try {
-        const r = await getReport(sessionId);
-        setReport(r);
+        const existingReport = await getReport(sessionId);
+        setReport(existingReport);
       } catch {
-        // No report yet — expected
+        // Report can be absent before the user generates it.
       } finally {
         setLoadingReport(false);
       }
 
       try {
-        const s = await getSummary(sessionId);
-        setSummary(s);
+        const existingSummary = await getSummary(sessionId);
+        setSummary(existingSummary);
       } catch {
-        // No evaluations
+        // Summary can be absent if there are no evaluations yet.
       } finally {
         setLoadingSummary(false);
       }
@@ -70,14 +72,10 @@ export default function ReportPage() {
     setGenerating(true);
     setError("");
     try {
-      const r = await generateReport(sessionId);
-      setReport(r);
-    } catch (e: unknown) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Không thể tạo báo cáo. Hãy kiểm tra session có evaluations."
-      );
+      const response = await generateReport(sessionId);
+      setReport(response);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Không thể tạo báo cáo. Hãy kiểm tra session có evaluations.");
     } finally {
       setGenerating(false);
     }
@@ -89,290 +87,242 @@ export default function ReportPage() {
     setExportError("");
     try {
       const blob = await exportReport(sessionId, format);
-      const ext = format === "markdown" ? "md" : "pdf";
-      downloadBlob(blob, `interview_report_session_${sessionId}.${ext}`);
-    } catch (e: unknown) {
-      setExportError(
-        e instanceof Error
-          ? e.message
-          : "Không thể tải báo cáo. Vui lòng thử lại."
-      );
+      downloadBlob(blob, `interview_report_session_${sessionId}.${format === "markdown" ? "md" : "pdf"}`);
+    } catch (error: unknown) {
+      setExportError(error instanceof Error ? error.message : "Không thể tải báo cáo. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   };
 
-  const isLoading = loadingReport || loadingSummary;
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <div className="animate-spin h-8 w-8 border-4 border-[var(--primary)] border-t-transparent rounded-full" />
-        <p className="text-sm text-[var(--muted)]">Đang tải báo cáo...</p>
-      </div>
-    );
+  if (loadingReport || loadingSummary) {
+    return <LoadingState title="Đang tải báo cáo..." subtitle="Collecting summary, scores, and export readiness." />;
   }
 
+  const strongest = summary?.best_criterion ? criterionLabels[summary.best_criterion] || summary.best_criterion : "Chưa có";
+  const weakest = summary?.weakest_criterion ? criterionLabels[summary.weakest_criterion] || summary.weakest_criterion : "Chưa có";
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">📊 Báo cáo phỏng vấn</h1>
-          <p className="text-sm text-[var(--muted)]">Session #{sessionId}</p>
-        </div>
-        <div className="flex gap-2">
-          <a
-            href={`/interview/${sessionId}`}
-            className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            ← Interview
-          </a>
-          <a
-            href="/setup"
-            className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            🔄 Demo mới
-          </a>
-        </div>
-      </div>
+    <PageContainer className="space-y-8 overflow-hidden">
+      <TechBackground />
+      <AnimatedPage className="relative space-y-8">
+      <PageHeader
+        eyebrow="Assessment dashboard"
+        title="Interview Report"
+        subtitle={`Báo cáo tổng kết buổi phỏng vấn · Session #${sessionId}`}
+        actions={
+          <>
+            <Link
+              href={`/interview/${sessionId}`}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-700"
+            >
+              Interview
+            </Link>
+            <Link
+              href="/setup"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-700"
+            >
+              New Demo
+            </Link>
+          </>
+        }
+      />
 
       {error && <ErrorAlert message={error} onDismiss={() => setError("")} />}
 
-      {/* Summary card */}
-      {summary && (
-        <Card>
-          <h2 className="font-semibold text-lg mb-4">📈 Tóm tắt điểm số</h2>
-          <div className="grid sm:grid-cols-3 gap-4 mb-5">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-3xl font-bold text-[var(--primary)]">
-                {summary.average_score.toFixed(1)}
-              </div>
-              <div className="text-xs text-[var(--muted)] mt-1">Điểm trung bình</div>
-            </div>
-            <div className="text-center p-4 bg-emerald-50 rounded-lg">
-              <div className="text-sm font-semibold text-emerald-700">
-                {criterionLabels[summary.best_criterion] || summary.best_criterion}
-              </div>
-              <div className="text-xs text-[var(--muted)] mt-1">🏆 Tiêu chí tốt nhất</div>
-            </div>
-            <div className="text-center p-4 bg-amber-50 rounded-lg">
-              <div className="text-sm font-semibold text-amber-700">
-                {criterionLabels[summary.weakest_criterion] || summary.weakest_criterion}
-              </div>
-              <div className="text-xs text-[var(--muted)] mt-1">⚠️ Cần cải thiện nhất</div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {Object.entries(summary.criterion_averages).map(([key, val]) => (
-              <ScoreBar
-                key={key}
-                label={criterionLabels[key] || key}
-                score={val as number}
-              />
-            ))}
-          </div>
-          <p className="text-xs text-[var(--muted)] mt-3">
-            📝 Tổng số câu trả lời: {summary.total_answers}
-          </p>
-        </Card>
-      )}
-
-      {/* Generate or show report */}
-      {!report ? (
-        <Card className="text-center">
-          <h2 className="font-semibold text-lg mb-2">📝 Báo cáo chi tiết</h2>
-          <p className="text-sm text-[var(--muted)] mb-4">
-            Tạo báo cáo AI phân tích điểm mạnh, điểm yếu, skill gaps và kế hoạch cải thiện.
-          </p>
-          {generating && (
-            <p className="text-sm text-blue-600 animate-pulse mb-3">
-              ⏳ AI đang phân tích và tạo báo cáo... (có thể mất 15-30 giây)
-            </p>
-          )}
-          <LoadingButton
-            loading={generating}
-            onClick={handleGenerate}
-            variant="primary"
-          >
-            🤖 Generate Report bằng AI
-          </LoadingButton>
-        </Card>
-      ) : (
-        <>
-          {/* ── Export buttons ── */}
-          <Card className="bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-semibold text-sm text-slate-700">📥 Tải báo cáo</h3>
-                <p className="text-xs text-[var(--muted)] mt-0.5">
-                  Bạn có thể tải báo cáo để lưu lại kế hoạch cải thiện sau buổi phỏng vấn.
-                </p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <LoadingButton
-                  loading={exportingMd}
-                  onClick={() => handleExport("markdown")}
-                  variant="secondary"
-                  disabled={exportingPdf}
-                >
-                  📄 Tải Markdown
-                </LoadingButton>
-                <LoadingButton
-                  loading={exportingPdf}
-                  onClick={() => handleExport("pdf")}
-                  variant="secondary"
-                  disabled={exportingMd}
-                >
-                  📑 Tải PDF
-                </LoadingButton>
-              </div>
-            </div>
-            {exportError && (
-              <div className="mt-3">
-                <ErrorAlert message={exportError} onDismiss={() => setExportError("")} />
-              </div>
-            )}
-          </Card>
-
-          {/* Overall score */}
-          <Card>
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-xl font-bold shadow-lg">
-                {report.overall_score.toFixed(1)}
-              </div>
-              <div>
-                <h2 className="font-semibold text-lg">Điểm tổng kết</h2>
-                <p className="text-sm text-[var(--muted)]">Trên thang 10 · Đánh giá bởi AI</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {Object.entries(report.criterion_scores).map(([key, val]) => (
-                <ScoreBar
-                  key={key}
-                  label={criterionLabels[key] || key}
-                  score={val as number}
-                />
-              ))}
-            </div>
-          </Card>
-
-          {/* Summary text */}
-          {report.summary && (
-            <Card>
-              <h3 className="font-semibold mb-2">📋 Tổng quan</h3>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{report.summary}</p>
-            </Card>
-          )}
-
-          {/* Strengths */}
-          {report.strengths_summary?.length > 0 && (
-            <Card className="border-l-4 border-l-emerald-500">
-              <h3 className="font-semibold mb-3 text-emerald-700">✅ Điểm mạnh</h3>
-              <ul className="space-y-1.5">
-                {report.strengths_summary.map((s, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2">
-                    <span className="text-emerald-500 shrink-0">•</span>{s}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-
-          {/* Weaknesses */}
-          {report.weaknesses_summary?.length > 0 && (
-            <Card className="border-l-4 border-l-amber-500">
-              <h3 className="font-semibold mb-3 text-amber-700">⚠️ Điểm yếu</h3>
-              <ul className="space-y-1.5">
-                {report.weaknesses_summary.map((w, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2">
-                    <span className="text-amber-500 shrink-0">•</span>{w}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-
-          {/* Skill Gaps */}
-          {report.skill_gap_summary?.length > 0 && (
-            <Card className="border-l-4 border-l-red-400">
-              <h3 className="font-semibold mb-3 text-red-700">🔍 Skill Gaps</h3>
-              <ul className="space-y-1.5">
-                {report.skill_gap_summary.map((g, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2">
-                    <span className="text-red-400 shrink-0">•</span>{g}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-
-          {/* Improvement Plan */}
-          {report.improvement_plan?.length > 0 && (
-            <Card className="border-l-4 border-l-blue-500">
-              <h3 className="font-semibold mb-3 text-blue-700">📚 Kế hoạch cải thiện</h3>
-              <ol className="space-y-1.5 list-decimal list-inside">
-                {report.improvement_plan.map((p, i) => (
-                  <li key={i} className="text-sm text-gray-700">{p}</li>
-                ))}
-              </ol>
-            </Card>
-          )}
-
-          {/* Recommended Topics */}
-          {report.recommended_topics?.length > 0 && (
-            <Card>
-              <h3 className="font-semibold mb-3">🎯 Chủ đề nên ôn tập</h3>
-              <div className="flex flex-wrap gap-2">
-                {report.recommended_topics.map((t, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Final Advice */}
-          {report.final_advice && (
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <h3 className="font-semibold mb-2 text-indigo-800">💡 Lời khuyên</h3>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{report.final_advice}</p>
-            </Card>
-          )}
-
-          {/* Regenerate */}
-          <Card className="text-center">
-            <p className="text-sm text-[var(--muted)] mb-3">
-              Muốn tạo lại báo cáo với phân tích mới?
-            </p>
-            <LoadingButton
-              loading={generating}
-              onClick={handleGenerate}
-              variant="secondary"
-            >
-              🔄 Regenerate Report
-            </LoadingButton>
-          </Card>
-        </>
-      )}
-
-      {/* Footer navigation */}
-      <div className="flex items-center justify-center gap-4 pb-8 text-sm">
-        <a
-          href={`/interview/${sessionId}`}
-          className="text-[var(--primary)] hover:underline"
-        >
-          ← Xem lại phỏng vấn
-        </a>
-        <span className="text-gray-300">|</span>
-        <a href="/setup" className="text-[var(--primary)] hover:underline">
-          🔄 Bắt đầu phỏng vấn mới
-        </a>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Overall score"
+          value={report ? report.overall_score.toFixed(1) : summary ? summary.average_score.toFixed(1) : "--"}
+          helper="Scale 0-10"
+          tone="blue"
+        />
+        <MetricCard label="Answered rounds" value={summary?.total_answers ?? 0} helper="Evaluated candidate answers" tone="emerald" />
+        <MetricCard label="Strongest criterion" value={<SmallMetricText>{strongest}</SmallMetricText>} tone="indigo" />
+        <MetricCard label="Weakest criterion" value={<SmallMetricText>{weakest}</SmallMetricText>} tone="amber" />
       </div>
-    </div>
+
+      {summary && (
+        <SectionCard className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-slate-50">Criteria averages</h2>
+              <p className="mt-1 text-sm text-slate-400">Điểm trung bình theo 6 tiêu chí đánh giá.</p>
+            </div>
+            <Badge tone="blue">Average {summary.average_score.toFixed(1)}/10</Badge>
+          </div>
+          <CriteriaScoreGrid scores={summary.criterion_averages} />
+        </SectionCard>
+      )}
+
+      <SectionCard className="relative overflow-hidden">
+        <div className="scan-highlight absolute inset-x-0 top-0 h-px" aria-hidden="true" />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-50">Report actions</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-400">
+              Generate or regenerate the Vietnamese report, then export Markdown/PDF.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button type="button" loading={generating} onClick={handleGenerate}>
+              {report ? "Regenerate" : "Generate Report"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              loading={exportingMd}
+              disabled={!report || exportingPdf}
+              onClick={() => handleExport("markdown")}
+            >
+              Export Markdown
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              loading={exportingPdf}
+              disabled={!report || exportingMd}
+              onClick={() => handleExport("pdf")}
+            >
+              Export PDF
+            </Button>
+          </div>
+        </div>
+        {generating && <p className="mt-4 text-sm text-blue-700">AI đang phân tích và tạo báo cáo tiếng Việt...</p>}
+        {exportError && <div className="mt-4"><ErrorAlert message={exportError} onDismiss={() => setExportError("")} /></div>}
+      </SectionCard>
+
+      {!report ? (
+        <EmptyState
+          title="Chưa có báo cáo chi tiết"
+          description="Nhấn Generate Report để tạo báo cáo tiếng Việt từ các evaluation hiện có của session."
+          action={
+            <Button type="button" loading={generating} onClick={handleGenerate}>
+              Generate Report
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <main className="min-w-0 space-y-5">
+            {report.summary && (
+              <ReportSection title="Tổng quan" tone="blue">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-slate-300">{report.summary}</p>
+              </ReportSection>
+            )}
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              <InsightList title="Điểm mạnh" items={report.strengths_summary} tone="emerald" />
+              <InsightList title="Điểm yếu" items={report.weaknesses_summary} tone="amber" />
+            </div>
+
+            <ReportSection title="Khoảng trống kỹ năng" tone="red">
+              <BulletList items={report.skill_gap_summary} />
+            </ReportSection>
+
+            <ReportSection title="Kế hoạch cải thiện" tone="indigo">
+              <NumberedList items={report.improvement_plan} />
+            </ReportSection>
+
+            <ReportSection title="Chủ đề nên ôn tập" tone="violet">
+              <div className="flex flex-wrap gap-2">
+                {report.recommended_topics.map((topic, index) => (
+                  <Badge key={`${topic}-${index}`} tone="violet">{topic}</Badge>
+                ))}
+              </div>
+            </ReportSection>
+
+            {report.final_advice && (
+              <ReportSection title="Lời khuyên cuối cùng" tone="emerald">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-slate-300">{report.final_advice}</p>
+              </ReportSection>
+            )}
+          </main>
+
+          <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+            <Card className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-bold text-slate-50">Final scores</h2>
+                <Badge tone="blue">{report.overall_score.toFixed(1)}/10</Badge>
+              </div>
+              <CriteriaScoreGrid scores={report.criterion_scores} />
+            </Card>
+            <Card className="bg-slate-950 text-white">
+              <h2 className="text-sm font-bold">Report language</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                Evaluation and report content remain Vietnamese. Interview questions and candidate answers remain English.
+              </p>
+            </Card>
+          </aside>
+        </div>
+      )}
+      </AnimatedPage>
+    </PageContainer>
+  );
+}
+
+function SmallMetricText({ children }: { children: React.ReactNode }) {
+  return <span className="block text-base font-bold leading-6">{children}</span>;
+}
+
+function ReportSection({
+  title,
+  tone,
+  children,
+}: {
+  title: string;
+  tone: "blue" | "indigo" | "violet" | "emerald" | "amber" | "red";
+  children: React.ReactNode;
+}) {
+  const toneMap = {
+    blue: "border-blue-100",
+    indigo: "border-indigo-100",
+    violet: "border-violet-100",
+    emerald: "border-emerald-100",
+    amber: "border-amber-100",
+    red: "border-red-100",
+  };
+  return (
+    <SectionCard className={toneMap[tone]}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-slate-50">{title}</h2>
+        <Badge tone={tone}>Report</Badge>
+      </div>
+      {children}
+    </SectionCard>
+  );
+}
+
+function BulletList({ items }: { items?: string[] }) {
+  if (!items || items.length === 0) {
+    return <p className="text-sm text-slate-500">Chưa có dữ liệu.</p>;
+  }
+  return (
+    <ul className="space-y-2 text-sm leading-7 text-slate-300">
+      {items.map((item, index) => (
+        <li key={index} className="flex gap-2">
+          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function NumberedList({ items }: { items?: string[] }) {
+  if (!items || items.length === 0) {
+    return <p className="text-sm text-slate-500">Chưa có dữ liệu.</p>;
+  }
+  return (
+    <ol className="space-y-3 text-sm leading-7 text-slate-300">
+      {items.map((item, index) => (
+        <li key={index} className="flex gap-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white">
+            {index + 1}
+          </span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
