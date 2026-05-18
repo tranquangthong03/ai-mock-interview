@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+backend/venv/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+frontend/node_modules/
+frontend/.next/
+frontend/.git.embedded-backup/
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env.local
+
+# Local databases and vector stores
+*.db
+backend/*.db
+chroma_db/
+backend/chroma_db/
+
+# Uploads and generated reports/audio
+uploads/
+backend/uploads/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

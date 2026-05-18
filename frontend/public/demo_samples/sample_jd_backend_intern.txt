@@ -1,0 +1,61 @@
+MÔ TẢ CÔNG VIỆC - BACKEND INTERN
+==================================
+
+Vị trí: Backend Intern / Junior Backend Developer
+Công ty: TechVN Solutions
+Địa điểm: TP. Hồ Chí Minh (Hybrid)
+Loại hình: Thực tập / Part-time / Full-time
+Thời gian: 3-6 tháng
+
+MÔ TẢ CÔNG VIỆC
+================
+Chúng tôi đang tìm kiếm Backend Intern năng động, ham học hỏi để tham gia phát triển
+các dịch vụ backend cho nền tảng quản lý doanh nghiệp. Bạn sẽ làm việc trực tiếp
+với đội ngũ senior engineers và tham gia vào quy trình phát triển phần mềm chuyên nghiệp.
+
+TRÁCH NHIỆM CHÍNH
+==================
+- Phát triển và bảo trì REST API sử dụng Python (FastAPI hoặc Flask)
+- Thiết kế và tối ưu hóa database schema (PostgreSQL)
+- Viết unit tests và integration tests để đảm bảo chất lượng code
+- Tham gia code review và cải thiện chất lượng codebase
+- Làm việc với đội frontend để tích hợp API
+- Hỗ trợ deploy và monitoring ứng dụng
+- Viết tài liệu kỹ thuật cho API endpoints
+
+YÊU CẦU BẮT BUỘC
+==================
+- Sinh viên năm 3-4 ngành CNTT, Kỹ thuật Phần mềm hoặc tương đương
+- Có kiến thức cơ bản về Python
+- Hiểu biết về REST API và HTTP methods (GET, POST, PUT, DELETE)
+- Có kiến thức cơ bản về SQL và database relational
+- Sử dụng thành thạo Git (branching, merging, pull request)
+- Có khả năng đọc hiểu tài liệu kỹ thuật tiếng Anh
+- Tư duy logic tốt và khả năng giải quyết vấn đề
+
+YÊU CẦU ƯU TIÊN
+=================
+- Kinh nghiệm với FastAPI hoặc Flask
+- Kinh nghiệm với Docker và containerization
+- Hiểu biết về Unit Testing (pytest)
+- Kinh nghiệm với PostgreSQL
+- Hiểu biết về authentication (JWT, OAuth2)
+- Kinh nghiệm với CI/CD (GitHub Actions, GitLab CI)
+- Có project cá nhân trên GitHub
+- Kiến thức về message queue (Redis, RabbitMQ)
+
+QUYỀN LỢI
+==========
+- Lương thực tập: 5-8 triệu VND/tháng
+- Được mentor 1-1 bởi Senior Engineer
+- Môi trường làm việc trẻ, năng động
+- Cơ hội chuyển full-time sau thực tập
+- Hỗ trợ học tập và phát triển nghề nghiệp
+- Team building hàng tháng
+
+TECH STACK
+==========
+- Backend: Python, FastAPI, SQLAlchemy
+- Database: PostgreSQL, Redis
+- DevOps: Docker, GitHub Actions, AWS
+- Tools: Postman, Swagger, Jira, Slack

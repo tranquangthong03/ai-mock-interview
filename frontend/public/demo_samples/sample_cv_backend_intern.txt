@@ -1,0 +1,66 @@
+THÔNG TIN ỨNG VIÊN
+==================
+
+Họ và tên: Nguyễn Văn Minh
+Email: nguyenvanminh.demo@gmail.com
+Số điện thoại: 0901-234-567
+Vị trí ứng tuyển: Backend Intern / Junior Backend Developer
+
+HỌC VẤN
+========
+- Trường: Đại học Bách Khoa TP.HCM (HCMUT)
+- Ngành: Kỹ thuật Phần mềm (Software Engineering)
+- Năm: Sinh viên năm 4 (dự kiến tốt nghiệp 2026)
+- GPA: 3.2/4.0
+
+KỸ NĂNG KỸ THUẬT
+=================
+Ngôn ngữ lập trình: Python, JavaScript, SQL
+Framework: FastAPI, Flask, Express.js
+Database: PostgreSQL, MySQL, SQLite
+Tools: Git, Docker, Postman, VS Code
+Kiến thức: REST API design, JWT authentication, ORM (SQLAlchemy), Unit Testing (pytest)
+Cơ bản: Linux command line, CI/CD concepts, Agile/Scrum
+
+DỰ ÁN CÁ NHÂN
+==============
+
+1. Student Management System (Python, FastAPI, PostgreSQL)
+   - Xây dựng REST API quản lý sinh viên với CRUD operations
+   - Sử dụng FastAPI + SQLAlchemy ORM + PostgreSQL
+   - Implement JWT authentication cho admin
+   - Viết unit tests với pytest, coverage > 80%
+   - Deploy lên Heroku với Docker
+   - GitHub: github.com/demo-user/student-management
+
+2. E-commerce API (Python, Flask, MySQL)
+   - API quản lý sản phẩm, đơn hàng, khách hàng
+   - Implement pagination, filtering, sorting
+   - Sử dụng Redis cho caching
+   - Tích hợp payment gateway (mock)
+   - API documentation với Swagger/OpenAPI
+
+3. Chat Application Backend (Node.js, Express, Socket.io)
+   - Real-time chat API với WebSocket
+   - Lưu trữ tin nhắn trong MongoDB
+   - Implement rate limiting và input validation
+   - Deploy trên AWS EC2
+
+KINH NGHIỆM
+============
+- Thực tập Backend Developer tại Công ty ABC Tech (3 tháng, 2025)
+  + Hỗ trợ phát triển API nội bộ bằng FastAPI
+  + Viết unit tests và integration tests
+  + Tham gia code review với team senior
+  + Sử dụng Git flow và Jira
+
+CHỨNG CHỈ
+=========
+- Python for Everybody (Coursera)
+- SQL for Data Science (Coursera)
+
+SỞ THÍCH
+=========
+- Đọc blog kỹ thuật (dev.to, Medium)
+- Contribute open source nhỏ trên GitHub
+- Tham gia các buổi meetup về Python/Backend
