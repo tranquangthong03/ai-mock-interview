@@ -13,6 +13,7 @@ from app.schemas import (
     ParseResponse,
 )
 from app.services.document_service import extract_text
+from app.services.document_validation_service import validate_document_for_parse
 from app.services.llm_extraction_service import parse_document
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -168,6 +169,12 @@ def parse_document_endpoint(
             status_code=400,
             detail="Document has no extracted text. Please re-upload the document."
         )
+
+    # Validate early to avoid unnecessary LLM calls
+    try:
+        validate_document_for_parse(document.document_type, document.extracted_text)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # Call LLM to parse
     try:
